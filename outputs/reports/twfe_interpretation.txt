@@ -1,0 +1,15 @@
+TWFE Regression Interpretation
+========================================
+
+Sign of the coefficient: negative (-110.975)
+Statistical significance at the 5% level: not statistically significant (p = 0.1136)
+95% confidence interval: [-248.466, 26.517]
+
+Economic interpretation:
+  Holding state-specific factors and national month-to-month conditions fixed, one additional disaster declaration in a state-month is associated with a negative change of approximately 111.0 business_applications in that same state-month.
+
+Practical interpretation:
+  The confidence interval for this coefficient includes zero, meaning we cannot rule out the possibility of no association between disaster_count and business_applications once state and month-year fixed effects are accounted for. This is consistent with the weak raw correlation observed in Module 3's exploratory analysis.
+
+IMPORTANT — this is an observational, correlational analysis.
+  State and month-year fixed effects rule out confounding from anything constant within a state (size, industry mix, baseline entrepreneurial activity) or common across all states in a given month (national recessions, seasonality, policy shocks). They do NOT establish that disasters cause changes in business applications. A state could experience both a disaster and an economic shift in the same month due to a shared underlying cause, and reverse causality or omitted state-specific time-varying factors cannot be ruled out by this model. Do not present this coefficient as causal evidence.

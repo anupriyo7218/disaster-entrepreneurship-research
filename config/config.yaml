@@ -1,0 +1,184 @@
+# =============================================================================
+# Project configuration
+# Disaster Impact on New Business Formation — Sustainable Entrepreneurship
+#
+# All values below were confirmed against the actual uploaded source files
+# during Module 0 inspection (not assumed from documentation alone).
+# =============================================================================
+
+project:
+  name: "disaster-entrepreneurship-research"
+  description: "Do natural disasters affect new business creation in the United States?"
+  random_seed: 42
+
+paths:
+  data_raw: "data/raw"
+  data_processed: "data/processed"
+  outputs_figures: "outputs/figures"
+  outputs_tables: "outputs/tables"
+  outputs_reports: "outputs/reports"
+  models: "models"
+  logs: "logs"
+
+# -----------------------------------------------------------------------------
+# Business Formation Statistics (Census BFS)
+# -----------------------------------------------------------------------------
+bfs:
+  raw_filename: "bfs_monthly.csv"
+  month_date_table_filename: "month_date_table.csv"
+  key_columns: ["sa", "naics_sector", "series", "geo", "year"]
+  month_columns: ["jan", "feb", "mar", "apr", "may", "jun",
+                   "jul", "aug", "sep", "oct", "nov", "dec"]
+  disclosure_codes: ["D", "S"]  # non-numeric codes confirmed present in month columns
+  na_code: "NA"
+
+  # Filters to be applied when building the analysis panel (finalized in prior discussion)
+  filters:
+    naics_sector: "TOTAL"      # state-level rows only ever carry TOTAL, confirmed
+    series: "BA_BA"            # headline Business Applications series
+    seasonal_adjustment: "U"   # not seasonally adjusted, to preserve monthly shock timing
+
+  # Region/aggregate codes to exclude when isolating state-level rows
+  exclude_geo_codes: ["US", "NO", "MW", "SO", "WE"]
+
+  # Confirmed empirically: BF_* (formation) series are 100% null for Puerto Rico
+  known_data_gaps:
+    - geo: "PR"
+      series_prefix: "BF_"
+      issue: "All Business Formation series are null for Puerto Rico"
+
+# -----------------------------------------------------------------------------
+# FEMA Disaster Declarations Summaries (OpenFEMA v2)
+# -----------------------------------------------------------------------------
+fema:
+  raw_filename: "DisasterDeclarationsSummaries.csv"
+  source_url: "https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries.csv"
+
+  columns_used:
+    - disasterNumber
+    - state
+    - declarationType
+    - incidentType
+    - incidentBeginDate
+
+  columns_ignored:
+    - femaDeclarationString
+    - declarationDate       # administrative lag vs incidentBeginDate; not used for event timing
+    - fyDeclared
+    - declarationTitle
+    - ihProgramDeclared
+    - iaProgramDeclared
+    - paProgramDeclared
+    - hmProgramDeclared
+    - incidentEndDate
+    - disasterCloseoutDate
+    - tribalRequest
+    - fipsStateCode
+    - fipsCountyCode
+    - placeCode
+    - designatedArea
+    - declarationRequestNumber
+    - lastIAFilingDate
+    - incidentId
+    - region
+    - designatedIncidentTypes
+    - lastRefresh
+    - hash
+    - id
+
+  date_field_for_timing: "incidentBeginDate"
+
+  # Confirmed empirically: exactly one state per disasterNumber (no cross-state fan-out).
+  # Fan-out instead occurs WITHIN a state, across counties/designated areas.
+  dedup_keys_for_state_month_panel: ["disasterNumber", "state"]
+
+  # Territory/FAS codes present in FEMA but not in the BFS geography — must be excluded
+  non_state_codes_to_exclude: ["AS", "FM", "GU", "MH", "MP", "PW", "VI"]
+
+  declaration_types: ["DR", "EM", "FM"]
+
+# -----------------------------------------------------------------------------
+# Shared geography reference
+# -----------------------------------------------------------------------------
+# The analysis panel is scoped to the 50 states + DC. Confirmed empirically in
+# Module 0 that this is exactly the set of 2-letter BFS `geo` codes once US,
+# region codes (NO/MW/SO/WE), and PR are excluded — 51 codes.
+geography:
+  valid_state_codes:
+    - AL
+    - AK
+    - AZ
+    - AR
+    - CA
+    - CO
+    - CT
+    - DE
+    - DC
+    - FL
+    - GA
+    - HI
+    - ID
+    - IL
+    - IN
+    - IA
+    - KS
+    - KY
+    - LA
+    - ME
+    - MD
+    - MA
+    - MI
+    - MN
+    - MS
+    - MO
+    - MT
+    - NE
+    - NV
+    - NH
+    - NJ
+    - NM
+    - NY
+    - NC
+    - ND
+    - OH
+    - OK
+    - OR
+    - PA
+    - RI
+    - SC
+    - SD
+    - TN
+    - TX
+    - UT
+    - VT
+    - VA
+    - WA
+    - WV
+    - WI
+    - WY
+
+# -----------------------------------------------------------------------------
+# Processed output filenames
+# -----------------------------------------------------------------------------
+processed_outputs:
+  bfs_clean: "bfs_clean.csv"
+  fema_clean: "fema_clean.csv"
+  disaster_panel: "disaster_panel.csv"
+  final_analysis_dataset: "final_analysis_dataset.csv"
+  preprocessing_summary: "preprocessing_summary.json"
+
+# -----------------------------------------------------------------------------
+# Module 4 — Two-Way Fixed Effects regression configuration
+# -----------------------------------------------------------------------------
+modeling:
+  dependent_variable: "business_applications"
+  independent_variable: "disaster_count"
+  entity_column: "state"       # cross-sectional unit -> state fixed effects
+  time_column: "year_month"    # calendar month -> month-year fixed effects
+  cluster_by: "entity"         # clustered standard errors by state
+  cov_type: "clustered"
+  outputs:
+    regression_table: "twfe_regression_table.csv"
+    diagnostics_table: "twfe_diagnostics.csv"
+    full_summary_txt: "twfe_full_summary.txt"
+    interpretation_txt: "twfe_interpretation.txt"

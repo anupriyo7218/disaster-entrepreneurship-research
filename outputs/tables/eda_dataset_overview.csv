@@ -1,0 +1,12 @@
+metric,value
+n_rows,13770
+n_columns,5
+n_states,51
+date_range_start,2004-07
+date_range_end,2026-12
+n_months_covered,270
+n_missing_business_applications,306
+n_missing_disaster_count,0
+n_duplicate_rows,0
+n_duplicate_state_month_keys,0
+pct_state_months_with_disaster,13.38
