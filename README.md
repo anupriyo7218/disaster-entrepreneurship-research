@@ -1,8 +1,4 @@
-## Research Paper Status
 
-The accompanying research manuscript based on this project is currently in the final stages of preparation in IEEE format for submission as an arXiv preprint.
-Once the manuscript has been submitted to arXiv, the preprint link will be shared here.
-Thank you for your patience.
 
 
 ## 🚀 Live Dashboard
